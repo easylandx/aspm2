@@ -828,7 +828,7 @@ function startHotel(){
 // ---------- ASPI · GUÍA DE VISITA ("Hazme el tour") ----------
 function startTour(){
   botSay('🧭 <b>¡Vamos de visita!</b> Te enseño la web de arriba abajo, resaltando cada sección con un foco y contándote qué hay en ella. Puedes pausar, avanzar o salir cuando quieras.')
-    .then(()=>setTimeout(runTour,500));
+    .then(()=>setTimeout(runTour,8000));
 }
 
 function tourExplain(el,title){
@@ -931,7 +931,7 @@ function runTour(){
     place(s);
     if(s.final){
       bNext.style.display='none';bPause.style.display='none';bar.style.width='0%';clearTimeout(timer);
-      let c=5;
+      let c=10;
       txt.innerHTML=`🎉 ¡Eso es todo! Ahora te llevo al <b>formulario de solicitud de información</b> en <b class="cd">${c}</b>… <a href="${FORM}">Ir ahora</a>`;
       cdTimer=setInterval(()=>{c--;if(c<=0){clearInterval(cdTimer);location.href=FORM}else txt.querySelector('.cd').textContent=c},1000);
     }else{
