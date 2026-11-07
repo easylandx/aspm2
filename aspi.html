@@ -872,33 +872,50 @@ function runTour(){
     try{doc=fr.contentDocument;win=fr.contentWindow;if(!doc||!doc.body)throw 0;doc.body.scrollHeight}catch(e){fail();return}
     const st=doc.createElement('style');
     st.textContent='#aspi-spot{position:absolute;z-index:2147483646;pointer-events:none;border:3px solid #FFD400;border-radius:18px;box-shadow:0 0 0 100vmax rgba(13,13,13,.64);transition:top .6s ease,left .6s ease,width .6s ease,height .6s ease}';
+    st.textContent+='.aspm-fab,.aspm-msg{display:none!important}';
     doc.head.appendChild(st);
+    doc.documentElement.style.scrollBehavior='auto';
     spot=doc.createElement('div');spot.id='aspi-spot';spot.style.opacity='0';doc.documentElement.appendChild(spot);
     doc.body.style.paddingBottom='280px';
-    const all=[...doc.querySelectorAll('header,section,footer')].filter(el=>{
-      if(el.parentElement&&el.parentElement.closest('header,section,footer'))return false;
-      if(el.closest('dialog,[role=dialog],[class*=modal],[id*=modal],[class*=legal],[id*=legal]'))return false;
-      const cs=win.getComputedStyle(el),r=el.getBoundingClientRect();
-      return cs.display!=='none'&&cs.visibility!=='hidden'&&r.height>60&&!el.id.startsWith('aspi-');
-    });
-    steps=all.map(el=>{
-      const h=el.querySelector('h1,h2,h3'),title=h?h.textContent.replace(/\s+/g,' ').trim().slice(0,60):'';
-      return {el,title,say:tourExplain(el,title)};
-    });
-    const formEl=doc.querySelector('form');
-    const formSec=formEl?(formEl.closest('section')||formEl):null;
+    const cfg=[
+      {sel:['.topbar','header'],top:1,title:'Menú',say:'Arriba tienes el menú: Junta Directiva, Noticias, el Área Privada para socias y el botón «Asóciate». En la barra superior, LinkedIn, «Pregunta a Aspi» (¡yo!) y el email.'},
+      {sel:['.hero'],title:'Portada',say:'Esta es la portada, con un titular que cambia en cada visita: ASPM conecta a profesionales de la asistencia a la dirección con formación, bolsa de empleo y comunidad. Desde aquí puedes asociarte o ser socio colaborador.'},
+      {sel:['#share-wa'],title:'Compartir por WhatsApp',say:'Este botón te permite compartir la web por WhatsApp con un mensaje y una imagen ya preparados.'},
+      {sel:['#beneficios'],title:'¿Por qué asociarte?',say:'Los tres grandes beneficios de asociarte: comunidad y soporte humano, networking exclusivo y formación continua.'},
+      {sel:['#colaboradores'],title:'Empresas y patrocinadores',say:'Para empresas: ser socio colaborador o patrocinador da visibilidad y acceso a perfiles con capacidad de decisión. Desde aquí puedes pedir propuesta.'},
+      {sel:['#noticias'],title:'Noticias y actividades',say:'Las últimas noticias y actividades de ASPM, que se cargan solas desde aspm.es.'},
+      {sel:['#unete h2','#unete a[href="#solicitud-socia"]'],title:'Da el siguiente paso',say:'Aquí empieza el siguiente paso: una comunidad que lleva 40 años defendiendo la profesión. Solo tienes que pulsar «Quiero asociarme».'},
+      {sel:['#solicitud-socia'],title:'Solicitud de información',say:'Este es el formulario de «Solicitud de Información»: nombre, apellidos y email, y ASPM se pone en contacto contigo para explicarte el proceso.'},
+      {sel:['.sponsors-wrapper'],title:'Marcas colaboradoras',say:'Y estas son las marcas que colaboran con ASPM, por categorías: hoteles, espacios y eventos, viajes y transporte, cultura y servicios.'},
+      {sel:['#contacto-footer'],title:'Contacto',say:'Abajo del todo: la dirección en el Paseo de la Castellana, el email de contacto, las redes sociales y el Aviso Legal.'}
+    ];
+    steps=cfg.map(c=>{const els=c.sel.map(q=>doc.querySelector(q)).filter(Boolean);return els.length?{els,top:c.top,title:c.title,say:c.say}:null}).filter(Boolean);
+    if(steps.length<4){ // respaldo genérico si la web cambia mucho
+      const all=[...doc.querySelectorAll('header,section,footer')].filter(el=>{
+        if(el.parentElement&&el.parentElement.closest('header,section,footer'))return false;
+        if(el.closest('dialog,[role=dialog],[class*=modal],[id*=modal],[class*=legal],[id*=legal],[class*=overlay],[id*=overlay]'))return false;
+        const cs=win.getComputedStyle(el),r=el.getBoundingClientRect();
+        return cs.display!=='none'&&cs.visibility!=='hidden'&&r.height>60&&!el.id.startsWith('aspi-');
+      });
+      steps=all.map(el=>{const h=el.querySelector('h1,h2,h3'),title=h?h.textContent.replace(/\s+/g,' ').trim().slice(0,60):'';return {els:[el],title,say:tourExplain(el,title)}});
+    }
     if(steps.length<2){fail();return}
-    steps.push({el:formSec||steps[steps.length-2].el,title:'Solicitud de información',final:true});
+    const formEl=doc.querySelector('#solicitud-socia')||doc.querySelector('form');
+    steps.push({els:[formEl?(formEl.id==='solicitud-socia'?formEl:(formEl.closest('section')||formEl)):steps[steps.length-2].els[0]],title:'Solicitud de información',final:true});
+    if(win.ResizeObserver){try{new win.ResizeObserver(()=>{if(!closed&&steps[i])place(steps[i],false)}).observe(doc.body)}catch(e){}}
     go(0);
   }
 
-  function place(el){
-    const r=el.getBoundingClientRect(),sy=win.scrollY,sx=win.scrollX,vh=win.innerHeight;
-    const top=r.top+sy,h=Math.min(r.height,vh*.62);
+  function place(s,scroll=true){
+    if(s.top&&scroll)win.scrollTo(0,0);
+    const rs=s.els.map(e=>e.getBoundingClientRect()),sy=win.scrollY,sx=win.scrollX,vh=win.innerHeight,cw=doc.documentElement.clientWidth;
+    const L=Math.min(...rs.map(r=>r.left)),T=Math.min(...rs.map(r=>r.top)),R=Math.max(...rs.map(r=>r.right)),B=Math.max(...rs.map(r=>r.bottom));
+    const full=(R-L)>=cw-24,pad=full?0:10;
+    const left=full?6:Math.max(4,L+sx-pad),w=full?cw-12:(R-L+2*pad);
+    const top=T+sy-pad+(full?4:0),h=Math.max(40,Math.min(B-T+2*pad,vh*.62)-(full?8:0));
     spot.style.opacity='1';
-    spot.style.top=(top+4)+'px';spot.style.left=(r.left+sx+6)+'px';
-    spot.style.width=Math.max(40,r.width-12)+'px';spot.style.height=Math.max(40,h-8)+'px';
-    win.scrollTo({top:Math.max(0,top-110),behavior:'smooth'});
+    spot.style.top=top+'px';spot.style.left=left+'px';spot.style.width=w+'px';spot.style.height=h+'px';
+    if(scroll)win.scrollTo({top:Math.max(0,top-110),behavior:'smooth'});
   }
   function arm(ms){
     clearTimeout(timer);bar.style.transition='none';bar.style.width='0%';
@@ -911,7 +928,7 @@ function runTour(){
     i=Math.max(0,Math.min(n,steps.length-1));const s=steps[i];
     stepEl.textContent=`Paso ${i+1} de ${steps.length}`+(s.title?` · ${s.title}`:'');
     bPrev.disabled=i===0;
-    place(s.el);
+    place(s);
     if(s.final){
       bNext.style.display='none';bPause.style.display='none';bar.style.width='0%';clearTimeout(timer);
       let c=5;
