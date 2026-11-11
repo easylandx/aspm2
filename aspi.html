@@ -316,7 +316,10 @@ body.tour-open{overflow:hidden}
 .day-res{margin-top:.7rem;padding:.65rem .8rem;border-radius:10px;background:rgba(32,57,74,.06);border-left:4px solid var(--primary)}
 .day-aspm{margin-top:.55rem;padding:.65rem .8rem;border-radius:10px;background:rgba(201,8,18,.07);border:1px solid rgba(201,8,18,.28)}
 
-/* ===== Aspi · calculadora «Tu valor como asistente» ===== */
+/* botón Menú Principal */
+.chip-menu{font-weight:700}
+a.chip{text-decoration:none;display:inline-block;line-height:normal}
+/* ===== Aspi · calculadora «Tu puntuación como asistente» ===== */
 .g-opt.sel{border-color:var(--accent);background:rgba(201,8,18,.07)}
 .g-opt.sel b::before{content:"✓ ";color:var(--accent)}
 .calc-step{font-size:.78rem;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.04em}
@@ -592,7 +595,10 @@ const KB=[
  a:`🔐 Los nombres de las personas de contacto, los correos y los teléfonos de cada empresa colaboradora están reunidos en el <b>Área Privada</b>, el espacio exclusivo para socias y socios, con buscador para encontrar a quien necesites en un momento. Entra aquí: ${L(PRIV,"Área Privada")}. Si todavía no eres socia, ¡te damos la bienvenida! Pide información en <a href="index.html#unete">Asóciate</a>.`,
  c:["¿Cómo me hago socia?","¿Qué hay en el Área Privada?"]},
 ];
-const SUG=["¿Qué es ASPM?","¿Cómo me hago socia?","¿Qué beneficios hay?","¿Qué descuentos hay para socias?","¿Cómo funciona la bolsa de empleo?","¿Quiénes son los patrocinadores?","¿Cómo contacto?","🪪 Crea tu tarjeta de socia","⏱️ Reto de 60 segundos","🧭 Hazme el tour","☀️ Un día en la vida de una asistente","💎 Calcula tu valor como asistente"];
+const SUG=["¿Qué es ASPM?","¿Cómo me hago socia?","¿Qué beneficios hay?","¿Qué descuentos hay para socias?","¿Cómo funciona la bolsa de empleo?","¿Quiénes son los patrocinadores?","¿Cómo contacto?","🪪 Crea tu tarjeta (simulada) de socia","⏱️ Reto de 60 segundos","🧭 Hazme el tour","☀️ Un día en la vida de una asistente","💎 Calcula tu puntuación como asistente","Envía mensaje y sugerencias a ASPM","Asóciate","Quiero ser Socio Colaborador"];
+const MENU="Menú Principal";
+const MENU_BTN='<button type="button" class="chip chip-menu menu-btn">Menú Principal</button>';
+const wireMenu=el=>el.querySelectorAll('.menu-btn').forEach(b=>b.onclick=()=>ask(MENU));
 // ====== MOTOR ======
 const norm=s=>s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9ñ ]/g," ");
 const STOP=new Set("el la los las un una de del en y a que es son por para con me te se mi tu como cual cuales hay al lo su sus o".split(" "));
@@ -608,7 +614,9 @@ const chat=document.getElementById('chat'),q=document.getElementById('q');
 function add(html,who,chips){
   const d=document.createElement('div');d.className='msg '+who;d.innerHTML=html;
   if(chips&&chips.length){const c=document.createElement('div');c.className='chips';
-    chips.forEach(t=>{const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=t;b.onclick=()=>ask(t);c.appendChild(b)});d.appendChild(c)}
+    chips.forEach(t=>{
+      if(CHIP_LINKS[t]){const a=document.createElement('a');a.className='chip chip-link';a.href=CHIP_LINKS[t];a.textContent=t;c.appendChild(a);return}
+      const b=document.createElement('button');b.type='button';b.className=t===MENU?'chip chip-menu':'chip';b.textContent=t;b.onclick=()=>ask(t);c.appendChild(b)});d.appendChild(c)}
   chat.appendChild(d);chat.scrollTop=chat.scrollHeight;return d;
 }
 function ask(t){
@@ -617,14 +625,16 @@ function ask(t){
   if(handleSpecial(t))return;
   const ty=add('<div class="typing"><i></i><i></i><i></i></div>','bot');
   setTimeout(()=>{ty.remove();const e=pick(t);
-    if(e)add(e.a,'bot',e.c);
-    else add(`🤔 Prueba con otra pregunta o escribe a <a href="mailto:secretaria@aspm.es">secretaria@aspm.es</a>.`,'bot',[SUG[0],SUG[1],SUG[3],SUG[4]]);
+    if(e)add(e.a,'bot',[...(e.c||[]),MENU]);
+    else add(`🤔 Prueba con otra pregunta o escribe a <a href="mailto:secretaria@aspm.es">secretaria@aspm.es</a>.`,'bot',[SUG[0],SUG[1],SUG[3],SUG[4],MENU]);
   },450+Math.random()*350);
 }
 // ====== ASPI · TARJETA DE SOCIA + RETOS DE 30 SEGUNDOS ======
 const SITE="https://easylandx.github.io/aspm/index.html";
 const FORM=SITE+"#unete";
+const CHIP_LINKS={"Asóciate":SITE+"#solicitud-socia","Quiero ser Socio Colaborador":SITE+"#quiero-colaborar"};
 const WA_TEXT="Nueva Web ASPM "+SITE;
+const CARD_WA_TEXT=WA_TEXT+"\n\nTarjeta simulada con fines de entretenimiento. Solicita la oficial.";
 let flow=null;
 const esc=s=>String(s).replace(/[<>&"]/g,m=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[m]));
 const clean=(s,max)=>s.replace(/[<>]/g,"").replace(/\s+/g," ").trim().slice(0,max);
@@ -638,19 +648,48 @@ function botSay(html,chips){
 
 function handleSpecial(t){
   const n=norm(t).trim();
+  if(n===norm(MENU)){flow=null;botSay('Aquí tienes el menú principal 👇 ¿Sobre qué te ayudo?',SUG);return true}
   if(flow){
-    if(/[?¿]/.test(t)){flow=null;return false}              // una pregunta: salimos del flujo y respondemos normal
-    if(/^(cancelar|salir|olvidalo|dejalo|no quiero)$/.test(n)){flow=null;botSay('Sin problema, lo dejamos aquí 😊 ¿Te ayudo con algo más?',[SUG[0],SUG[1],SUG[7],SUG[8]]);return true}
+    if(SUG.includes(t)||(!flow.free&&/[?¿]/.test(t))){flow=null;return false}   // un botón o una pregunta: salimos del flujo y respondemos normal
+    if(/^(cancelar|salir|olvidalo|dejalo|no quiero)$/.test(n)){flow=null;botSay('Sin problema, lo dejamos aquí 😊 ¿Te ayudo con algo más?',[SUG[0],SUG[1],SUG[7],SUG[8],MENU]);return true}
     flow(t);return true;
   }
-  if(/valor como asistente|calculadora|calcula\w* (mi|tu) valor|cuanto valgo|mi valor/.test(n)){startCalc();return true}
+  if(/(valor|puntuacion) como asistente|calculadora|calcula\w* (mi|tu) (valor|puntuacion)|cuanto valgo|mi (valor|puntuacion)/.test(n)){startCalc();return true}
   if(/dia en la vida|jornada (de|en)|un dia de una/.test(n)){startDay();return true}
+  if(/(envia|enviar|mandar|manda|escribir|escribe|dejar|deja).*(mensaje|sugerencia)|\bsugerencias?\b/.test(n)){startMsg();return true}
   if(/\btour\b|visita guiada|guia de visita|recorr\w* la web/.test(n)){startTour();return true}
   if(/\btarjeta\b|\bcredencial\b/.test(n)&&!/credito|debito|visa|bancaria/.test(n)){startCard();return true}
   if(/ordena.*agenda|agenda.*directivo/.test(n)){startAgenda();return true}
   if(/(mejor|elige).*hotel.*evento/.test(n)){startHotel();return true}
   if(/\bretos?\b|mini ?juegos?|\bjuegos?\b|jugar|60 segundos/.test(n)){startChallenge();return true}
   return false;
+}
+
+// ---------- MENSAJE Y SUGERENCIAS A ASPM ----------
+const ASPM_MAIL="secretaria@aspm.es";
+function startMsg(){
+  flow=txt=>{
+    const msg=clean(txt,1500);
+    if(!msg){botSay('Escribe tu mensaje o sugerencia y pulsa <b>Enviar</b> 😊');return}
+    flow=null;sendMsg(msg);
+  };
+  flow.free=true;
+  botSay('✉️ <b>Envía tu mensaje o sugerencia a ASPM.</b> Escríbelo abajo y pulsa <b>Enviar</b>: llegará directamente a la secretaría. Si quieres que te respondan, incluye tu nombre y tu email en el mensaje. (Escribe «cancelar» para salir.)');
+}
+
+async function sendMsg(msg){
+  const ty=add('<div class="typing"><i></i><i></i><i></i></div>','bot');
+  let ok=false;
+  try{
+    const r=await fetch("https://formsubmit.co/ajax/"+ASPM_MAIL,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},
+      body:JSON.stringify({_subject:"Mensaje o sugerencia desde Aspi (chat de ASPM)",_template:"table",_captcha:"false",_honey:"",Mensaje:msg,Origen:"Aspi · "+location.href})});
+    const j=await r.json().catch(()=>({}));
+    ok=r.ok&&String(j.success)!=="false";
+  }catch(e){ok=false}
+  ty.remove();
+  if(ok){botSay('✅ <b>¡Enviado!</b> Tu mensaje ya está en la bandeja de la secretaría de ASPM. ¡Gracias por escribirnos! 💛',[MENU]);return}
+  const href="mailto:"+ASPM_MAIL+"?subject="+encodeURIComponent("Mensaje o sugerencia desde Aspi")+"&body="+encodeURIComponent(msg);
+  botSay(`<a href="${href}">Enviar el mensaje por email</a>`,[MENU]);
 }
 
 // ---------- TARJETA DE SOCIA ----------
@@ -665,7 +704,7 @@ function startCard(){
     };
     botSay(`Encantada, <b>${esc(nm)}</b> 💛 ¿Y a qué te dedicas? Escribe tu profesión.`,['Asistente de dirección','Secretaria ejecutiva','Office manager','Executive assistant']);
   };
-  botSay('¡Vamos a crear tu <b>tarjeta de socia personalizada</b>! 🪪 Es ficticia (no un carnet oficial), pensada para compartir. Primero: <b>¿cómo te llamas?</b>');
+  botSay('¡Vamos a crear tu <b>tarjeta de socia personalizada</b>! 🪪 Es simulada (no un carnet oficial) y con fines de entretenimiento, pensada para compartir. Primero: <b>¿cómo te llamas?</b>');
 }
 
 function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()}
@@ -713,7 +752,7 @@ async function drawCard(name,job){
   g.font=`700 36px ${F}`;g.fillStyle="#fff";g.fillText("Nº "+num,x+196,y+526);
   g.font=`500 22px ${F}`;g.fillStyle="rgba(255,255,255,.7)";g.fillText("Asociación del Secretariado Profesional de Madrid · desde 1987",x+196,y+562);
   // franja inferior
-  g.textAlign="center";g.font=`700 20px ${F}`;g.fillStyle="#fff";g.fillText("TARJETA FICTICIA · HECHA CON ASPI · NO ES UN CARNET OFICIAL",x+w/2,y+h-16);
+  g.textAlign="center";g.font=`700 22px ${F}`;g.fillStyle="#fff";g.fillText("Tarjeta simulada con fines de entretenimiento. Solicita la oficial.",x+w/2,y+h-16);
   return new Promise(res=>c.toBlob(b=>res(b),"image/png"));
 }
 
@@ -721,9 +760,10 @@ async function makeCard(name,job){
   const ty=add('<div class="typing"><i></i><i></i><i></i></div>','bot');
   let blob;try{blob=await drawCard(name,job)}catch(e){blob=null}
   ty.remove();
-  if(!blob){add('😕 No he podido generar la tarjeta en este navegador. ¡Prueba de nuevo!','bot',[SUG[7]]);return}
+  if(!blob){add('😕 No he podido generar la tarjeta en este navegador. ¡Prueba de nuevo!','bot',[SUG[7],MENU]);return}
   const url=URL.createObjectURL(blob);
-  const d=add(`¡Lista, <b>${esc(name)}</b>! 🎉 Aquí tienes tu tarjeta de socia <i>(ficticia, solo por diversión)</i>.<img class="card-preview" alt="Tarjeta de socia ASPM de ${esc(name)}" src="${url}"><div class="btn-row"><button type="button" class="btn btn-wa">💬 Compartir en WhatsApp</button><a class="btn btn-secondary" download="tarjeta-socia-aspm.png" href="${url}">⬇️ Descargar</a><button type="button" class="chip again">🔄 Hacer otra</button></div><div class="share-note" aria-live="polite"></div>`,'bot');
+  const d=add(`¡Lista, <b>${esc(name)}</b>! 🎉 Aquí tienes tu tarjeta de socia <i>(Tarjeta simulada con fines de entretenimiento. Solicita la oficial.)</i>.<img class="card-preview" alt="Tarjeta de socia ASPM de ${esc(name)}" src="${url}"><div class="btn-row"><button type="button" class="btn btn-wa">💬 Compartir en WhatsApp</button><a class="btn btn-secondary" download="tarjeta-socia-aspm.png" href="${url}">⬇️ Descargar</a><button type="button" class="chip again">🔄 Hacer otra</button>${MENU_BTN}</div><div class="share-note" aria-live="polite"></div>`,'bot');
+  wireMenu(d);
   const note=d.querySelector('.share-note');
   d.querySelector('.btn-wa').onclick=()=>shareCard(blob,note);
   d.querySelector('.again').onclick=()=>ask('Crear otra tarjeta');
@@ -732,12 +772,12 @@ async function makeCard(name,job){
 
 function shareCard(blob,note){
   const mobile=isMobile();
-  const wa=(mobile?"https://wa.me/?text=":"https://web.whatsapp.com/send?text=")+encodeURIComponent(WA_TEXT);
+  const wa=(mobile?"https://wa.me/?text=":"https://web.whatsapp.com/send?text=")+encodeURIComponent(CARD_WA_TEXT);
   const copyImg=()=>{try{return navigator.clipboard.write([new ClipboardItem({"image/png":blob})])}catch(e){return Promise.reject(e)}};
   if(mobile){
     const f=new File([blob],"tarjeta-socia-aspm.png",{type:"image/png"});
     if(navigator.canShare&&navigator.canShare({files:[f]})){
-      navigator.share({files:[f],text:WA_TEXT}).then(()=>{note.innerHTML="✅ Elige <b>WhatsApp</b> y la tarjeta se adjunta sola con el mensaje."}).catch(err=>{if(err&&err.name==="AbortError")return;mobileCopyOpen()});
+      navigator.share({files:[f],text:CARD_WA_TEXT}).then(()=>{note.innerHTML="✅ Elige <b>WhatsApp</b> y la tarjeta se adjunta sola con el mensaje."}).catch(err=>{if(err&&err.name==="AbortError")return;mobileCopyOpen()});
       return;
     }
     mobileCopyOpen();return;
@@ -784,11 +824,13 @@ function endGame(d,tm,ok,msg,retry){
   const foot=d.querySelector('.g-foot');
   if(ok){
     let s=10;
-    foot.innerHTML=`<div class="g-result ok">🏆 <b>¡Reto superado en ${tm.secs()} s!</b> ${msg||''}<br>Te llevo al formulario de solicitud de información en <b class="cd">10</b>… <a href="${FORM}">Ir ahora</a> · <button type="button" class="chip stay">Quedarme aquí</button></div>`;
+    foot.innerHTML=`<div class="g-result ok">🏆 <b>¡Reto superado en ${tm.secs()} s!</b> ${msg||''}<br>Te llevo al formulario de solicitud de información en <b class="cd">10</b>… <a href="${FORM}">Ir ahora</a> · <button type="button" class="chip stay">Quedarme aquí</button></div><div class="btn-row">${MENU_BTN}</div>`;
+    wireMenu(foot);
     const cd=foot.querySelector('.cd'),iv=setInterval(()=>{s--;if(s<=0){clearInterval(iv);location.href=FORM}else cd.textContent=s},1000);
     foot.querySelector('.stay').onclick=()=>{clearInterval(iv);foot.querySelector('.g-result').innerHTML=`🏆 ¡Genial! Cuando quieras, aquí tienes el <a href="${FORM}">formulario de solicitud de información</a>.`};
   }else{
-    foot.innerHTML=`<div class="g-result ko">${msg}</div><div class="btn-row"><button type="button" class="chip retry">🔁 Reintentar</button><button type="button" class="chip other">🎲 Otro reto</button></div>`;
+    foot.innerHTML=`<div class="g-result ko">${msg}</div><div class="btn-row"><button type="button" class="chip retry">🔁 Reintentar</button><button type="button" class="chip other">🎲 Otro reto</button>${MENU_BTN}</div>`;
+    wireMenu(foot);
     foot.querySelector('.retry').onclick=retry;
     foot.querySelector('.other').onclick=()=>startChallenge();
   }
@@ -898,7 +940,7 @@ function runTour(){
   function close(msg){
     if(closed)return;closed=true;clearTimeout(timer);clearInterval(cdTimer);
     document.removeEventListener('keydown',onKey);ov.remove();document.body.classList.remove('tour-open');
-    if(msg)botSay(msg);
+    if(msg)botSay(msg,[MENU]);
   }
   function fail(){close(`😕 No puedo hacer la visita desde aquí (solo funciona con la web publicada). Puedes verla tú mismo/a en la <a href="${SITE}">web de ASPM</a>.`)}
   function onKey(e){if(e.key==='Escape')exit();else if(e.key==='ArrowRight')next();else if(e.key==='ArrowLeft')prev()}
@@ -1037,10 +1079,10 @@ function dayScene(n){
 }
 
 function dayEnd(){
-  botSay(`🌙 <b>19:00.</b> Cierras el portátil: agenda cerrada, viaje reservado y consejo organizado. Una jornada así se lleva mucho mejor <b>en comunidad</b>: con formación, ventajas y compañeras que te entienden.<div class="btn-row"><a class="btn btn-primary" href="${FORM}">Quiero asociarme</a></div>`,['¿Qué beneficios hay?','¿Qué descuentos hay para socias?',SUG[11],SUG[10]]);
+  botSay(`🌙 <b>19:00.</b> Cierras el portátil: agenda cerrada, viaje reservado y consejo organizado. Una jornada así se lleva mucho mejor <b>en comunidad</b>: con formación, ventajas y compañeras que te entienden.<div class="btn-row"><a class="btn btn-primary" href="${FORM}">Quiero asociarme</a></div>`,['¿Qué beneficios hay?','¿Qué descuentos hay para socias?',SUG[11],SUG[10],MENU]);
 }
 
-// ====== ASPI · CALCULADORA «TU VALOR COMO ASISTENTE» ======
+// ====== ASPI · CALCULADORA «TU PUNTUACIÓN COMO ASISTENTE» ======
 const CALC_EXP=[
   {t:'Menos de 2 años',s:20,r:0,w:'menos de 2 años de experiencia'},
   {t:'De 2 a 4 años',s:40,r:1,w:'entre 2 y 4 años de experiencia'},
@@ -1059,10 +1101,13 @@ const CALC_SEC=[
   {t:'Otro sector',s:64,tip:'La Bolsa de Empleo (con canal de WhatsApp) y el contacto con Adecco Top Assistants te dan visibilidad ante empresas de cualquier sector.'}
 ];
 const clamp100=n=>Math.max(0,Math.min(100,Math.round(n)));
-function calcLevel(s){return s<40?'🌱 Asistente en despegue':s<60?'💪 Asistente sólida':s<75?'⭐ Asistente de referencia':'👑 Mano derecha estratégica'}
+// Toda puntuación mostrada queda entre 70 y 100
+const clamp70=n=>Math.max(70,Math.min(100,Math.round(n)));
+const to70=n=>clamp70(70+0.3*clamp100(n));
+function calcLevel(s){return s<82?'🌱 Asistente en despegue':s<88?'💪 Asistente sólida':s<93?'⭐ Asistente de referencia':'👑 Mano derecha estratégica'}
 
 function startCalc(){
-  botSay('💎 <b>Tu valor como asistente.</b> Te hago 3 preguntas rápidas (años de experiencia, idiomas y sector) y te muestro tu perfil y cómo crecería dentro de la red de ASPM. Es una estimación orientativa y no guardo ningún dato.')
+  botSay('💎 <b>Tu puntuación como asistente.</b> Te hago 3 preguntas rápidas (años de experiencia, idiomas y sector) y te muestro tu perfil y cómo crecería dentro de la red de ASPM. Es una estimación orientativa y no guardo ningún dato.')
     .then(()=>setTimeout(()=>calcStep1({}),900));
 }
 
@@ -1119,9 +1164,9 @@ function calcStep3(st){
 function calcScores(st){
   const e=st.exp,r=e.r,hasEn=st.langs.includes('Inglés'),others=st.langs.filter(l=>l!=='Inglés').length;
   const idi=clamp100(20+(hasEn?40:0)+Math.min(others,3)*20);
-  const now={exp:e.s,idi:idi,esp:st.sec.s,red:18+r*7};
-  const aspm={exp:e.s,idi:idi,esp:clamp100(st.sec.s+14),red:clamp100(88+r*2)};
-  const tot=o=>clamp100(.30*o.exp+.25*o.idi+.20*o.esp+.25*o.red);
+  const now={exp:to70(e.s),idi:to70(idi),esp:to70(st.sec.s),red:to70(18+r*7)};
+  const aspm={exp:to70(e.s),idi:to70(idi),esp:to70(st.sec.s+14),red:to70(88+r*2)};
+  const tot=o=>clamp70(.30*o.exp+.25*o.idi+.20*o.esp+.25*o.red);
   return {now,aspm,tn:tot(now),ta:tot(aspm)};
 }
 
@@ -1134,15 +1179,16 @@ function calcResult(st){
   const plus=sc.ta-sc.tn;
   const html=`<div class="calc-badge">${calcLevel(sc.tn)}</div>
 <p class="g-brief" style="margin-top:.5rem">Tu perfil: asistente con <b>${st.exp.w}</b>, idiomas (<b>${esc(langTxt)}</b>) y sector <b>${esc(st.sec.t.toLowerCase())}</b>. Tu punto más fuerte hoy es <b>${own[0].toLowerCase()}</b>.</p>
-<div class="calc-scores"><div class="calc-sc"><small>Tu valor hoy</small><b class="calc-n" data-to="${sc.tn}">0</b></div><div class="calc-arrow" aria-hidden="true">→</div><div class="calc-sc calc-sc-aspm"><small>Con la red de ASPM</small><b class="calc-n" data-to="${sc.ta}">0</b><span class="calc-plus">+${plus}</span></div></div>
+<div class="calc-scores"><div class="calc-sc"><small>Tu puntuación hoy</small><b class="calc-n" data-to="${sc.tn}">0</b></div><div class="calc-arrow" aria-hidden="true">→</div><div class="calc-sc calc-sc-aspm"><small>Con la red de ASPM</small><b class="calc-n" data-to="${sc.ta}">0</b><span class="calc-plus">+${plus}</span></div></div>
 <div class="calc-dims">${rows}</div>
 <div class="calc-legend"><span>Hoy</span><span>Con la red de ASPM</span></div>
 <div class="day-res">Lo que más crece es tu <b>red y visibilidad</b> (contactos, empresas aliadas, bolsa de empleo) y tu <b>especialización</b> (formación continua). Tu experiencia y tus idiomas los pones tú: ¡y ya cuentan!</div>
 <div class="day-aspm">${st.sec.tip}</div>
 <div class="share-note">Estimación orientativa y divertida: no es una valoración salarial ni oficial, ni una promesa de resultados.</div>
-<div class="btn-row"><a class="btn btn-primary" href="${FORM}">Quiero asociarme</a><button type="button" class="chip calc-again">🔄 Repetir</button></div>`;
+<div class="btn-row"><a class="btn btn-primary" href="${FORM}">Quiero asociarme</a><button type="button" class="chip calc-again">🔄 Repetir</button>${MENU_BTN}</div>`;
   const d=add(html,'bot gamemsg');
-  d.querySelector('.calc-again').onclick=()=>ask('Calcula tu valor como asistente');
+  d.querySelector('.calc-again').onclick=()=>ask('Calcula tu puntuación como asistente');
+  wireMenu(d);
   chat.scrollTop=chat.scrollHeight;
   // animación de barras y contadores
   const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
