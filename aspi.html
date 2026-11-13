@@ -347,6 +347,8 @@ a.chip{text-decoration:none;display:inline-block;line-height:normal}
 .calc-legend span::before{content:"";display:inline-block;width:.7rem;height:.7rem;border-radius:3px;margin-right:.35rem;vertical-align:-1px;background:var(--primary)}
 .calc-legend span+span::before{background:rgba(201,8,18,.55)}
 @media(prefers-reduced-motion:reduce){.calc-track i{transition:none}}
+
+.day-ref-title{margin-top:12px;margin-bottom:6px;font-size:.92em}.day-ref-title span{font-size:.86em;opacity:.75}.day-ref-options{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}.day-ref{font-size:.84em!important;padding:6px 9px!important}.day-ref.picked{outline:2px solid var(--primary,#2874a6)}.day-private{font-size:.88em;margin-top:8px}
 </style>
 
   <!-- PWA: app instalable -->
@@ -460,12 +462,44 @@ a.chip{text-decoration:none;display:inline-block;line-height:normal}
     </div>
   </footer>
 <script>
-// ====== BASE DE CONOCIMIENTO (extraída del código adjunto) ======
+// ====== BASE DE CONOCIMIENTO ======
+// Directorio público de entidades: solo nombre y web, sin contactos personales.
+const SPONSOR_DATA={"Hoteles y alojamiento":{"Socio Colaborador":[["1881 Hotels","https://1881hotels.com"],["Apartamentos El Parque Atocha","https://apartamentoselparque.es"],["Barceló Hoteles","https://barcelo.com"],["Derby Hotels Collection / Hoteles Villarreal / Urban","https://derbyhotels.com"],["Eurostars Hotels","https://eurostarshotels.com"],["Four Seasons Hotel Madrid","https://fourseasons.com"],["Hotel Spa Villa Nazules","https://villanazules.com"],["Hoteles Fontecruz","https://fontecruzhoteles.com"],["RafaelHoteles Atocha","https://rafaelhoteles.com"],["The Palace Madrid","https://thepalacemadrid.com"],["The Westin Madrid Cuzco","https://marriott.com"],["Único Hotel y The Principal","https://unicohotels.com"]],"Patrocinador":[["Castilla Termal Hoteles","https://castillatermal.com"],["H10 Hotels","https://h10hotels.com"],["Hospes Puerta de Alcalá Madrid","https://hospes.com"],["Hoteles Santos","https://hsantos.es"],["InterContinental Madrid Hotel","https://ihg.com"],["Marriott Princesa","https://marriott.com"],["Meliá Hotels International","https://melia.com"],["Minor Hotels · NH Hotels","https://minorhotels.com"],["Paradores Hoteles y Restaurantes","https://paradores.es"]]},"Transporte y movilidad":{"Socio Colaborador":[["Gold Driving","https://golddriving.es"],["SmartRental","https://smartrental.com"]],"Patrocinador":[["Air Europa","https://aireuropa.com"],["Binter","https://bintercanarias.com"],["Europcar","https://europcar.es"],["Joinup","https://joinup.es"],["TAP Air Portugal","https://flytap.com"],]},"Viajes y agencias":{"Socio Colaborador":[["BizAway","https://bizaway.com"],["PANGEA The Travel Store","https://pangea.es"],["Presstour","https://presstour.es"]],"Patrocinador":[["Convention Bureau Gran Canaria","https://grancanariacb.com"],["Convention Bureau Madrid","https://esmadrid.com"],["Costa del Sol Convention Bureau","https://visitacostadelsol.com"]]},"Espacios y eventos":{"Socio Colaborador":[["Eventos Parques Reunidos","https://parquesreunidos.com"],["Ephimera","https://ephimera.org"],["Somos Experiences","https://somosexperiences.com"],["SPMICE","https://spmice.com"],["The Bamboo Plan · Hotels2Meet","https://thebambooplan.com"]],"Patrocinador":[["EventoPlus","https://eventoplus.com"],["Imagina","https://imaginaeventos.es"],["El Deseo Madrid","https://eldeseomadrid.com"],["El Secreto Madrid","https://elsecretomadrid.com"]]},"Restauración":{"Socio Colaborador":[["Upper Eat · Executive Restaurants of the World","https://uppereat.com"]],"Patrocinador":[["Fudeat","https://fudeat.com"],["Grupo Andalina","https://grupoandilana.com"],["Santa Teresa","https://santateresagourmet.com"]]},"Ocio y experiencias":{"Socio Colaborador":[["Kinepolis Empresas","https://kinepolis.es"]],"Patrocinador":[["Puy du Fou España","https://puydufou.com"],["Hammam Al Ándalus Madrid","https://madrid.hammamalandalus.com"]]},"Bienestar y compras":{"Socio Colaborador":[["Calandria","https://calandria.es"],["Ixora Floristas","https://ixorafloristas.com"]],"Patrocinador":[["ARTE Y FOTOS Fotógrafo","https://arteyfotos.es"],["El Corte Inglés Department Stores","https://elcorteingles.es"],["Rituals","https://rituals.com"]]},"Servicios profesionales":{"Socio Colaborador":[],"Patrocinador":[["ALTER Consultores Legales","https://alterconsultores.es"],["Christian Buss · Repeople","https://repeople.co"],["EasyLandX Web y App","https://easylandx.github.io"],["FELIPE GARCÍA REY Coach Motivacional","https://felipegarciarey.com"],["Fotocápsula","https://fotocapsula.es"],["Fundación FASE","https://fasefundacion.org"],["Lowen","https://lowen.es"],["Pressfactory España","https://pressfactory.es"],["The Corner of Excellence","https://thecornerofexcellence.com"]]}};
+const SPONSOR_CATEGORIES=["Todas",...Object.keys(SPONSOR_DATA),"Socio Colaborador","Patrocinador"];
+function sponsorReply(category="Todas",groupFilter=null){
+  const cats=category==="Todas"?Object.keys(SPONSOR_DATA):[category];
+  const categoryNames=Object.keys(SPONSOR_DATA);
+  let html='<h3>🌐 Ecosistema ASPM</h3><p><b>Socios Colaboradores y Patrocinadores</b></p><p>Para más información sobre ventajas, condiciones y datos de contacto, consulta el '+L(PRIV,'Área Privada')+'.</p>';
+  for(const group of (groupFilter?[groupFilter]:["Socio Colaborador","Patrocinador"])){
+    html+=`<h3>${group==="Socio Colaborador"?"Socios Colaboradores":"Patrocinadores"}</h3>`;
+    for(const cat of cats){
+      const items=(SPONSOR_DATA[cat]&&SPONSOR_DATA[cat][group])||[];
+      if(items.length) html+=`<h4>${cat}</h4><ul style="font-size:0.82em;line-height:1.35;padding-left:1.2em;margin-top:0.35em;margin-bottom:0.8em">${items.map(([name,url])=>`<li style="font-size:0.92em;margin-bottom:0.22em"><b>${name}</b>${url?` · <a href="${url}" target="_blank" rel="noopener noreferrer">${url.replace(/^https?:\/\//,"")} ↗</a>`:" · Web no facilitada"}</li>`).join("")}</ul>`;
+    }
+  }
+  return html;
+}
+
 const L=(u,t)=>/^(https?:|mailto:|tel:)/i.test(u)?`<a href="${u}" target="_blank" rel="noopener noreferrer">${t}</a>`:`<a href="${u}">${t}</a>`;
-const PRIV="https://easylandx.github.io/aspm/asociados.html";
+const PRIV="/test/asociados.html";
 const KB=[
+{k:"ecosistema aspm socios colaboradores patrocinadores empresas entidades directorio marcas todas categorias web paginas web",a:sponsorReply("Todas"),c:["Todas","Hoteles y alojamiento","Transporte y movilidad","Viajes y agencias","Espacios y eventos","Restauración","Ocio y experiencias","Bienestar y compras","Servicios profesionales","Socio Colaborador","Patrocinador"]},
+{k:"socios colaboradores listado entidades empresas webs",a:sponsorReply("Todas"),c:["Todas","Hoteles y alojamiento","Transporte y movilidad","Viajes y agencias","Espacios y eventos","Restauración","Ocio y experiencias","Bienestar y compras","Servicios profesionales","Socio Colaborador","Patrocinador"]},
+{k:"patrocinadores listado entidades empresas webs patrocinio",a:sponsorReply("Todas"),c:["Todas","Hoteles y alojamiento","Transporte y movilidad","Viajes y agencias","Espacios y eventos","Restauración","Ocio y experiencias","Bienestar y compras","Servicios profesionales","Socio Colaborador","Patrocinador"]},
+{k:"socio colaborador socios colaboradores listado empresas entidades",a:sponsorReply("Todas","Socio Colaborador"),c:["Todas","Hoteles y alojamiento","Transporte y movilidad","Viajes y agencias","Espacios y eventos","Restauración","Ocio y experiencias","Bienestar y compras","Servicios profesionales","Socio Colaborador","Patrocinador"]},
+{k:"patrocinador patrocinadores listado empresas entidades",a:sponsorReply("Todas","Patrocinador"),c:["Todas","Hoteles y alojamiento","Transporte y movilidad","Viajes y agencias","Espacios y eventos","Restauración","Ocio y experiencias","Bienestar y compras","Servicios profesionales","Socio Colaborador","Patrocinador"]},
+{k:"hoteles y alojamiento directorio entidades empresas colaboradores patrocinadores web",a:sponsorReply("Hoteles y alojamiento"),c:["Todas","Hoteles y alojamiento","Transporte y movilidad","Viajes y agencias","Espacios y eventos","Restauración","Ocio y experiencias","Bienestar y compras","Servicios profesionales","Socio Colaborador","Patrocinador"]},
+{k:"transporte y movilidad directorio entidades empresas colaboradores patrocinadores web",a:sponsorReply("Transporte y movilidad"),c:["Todas","Hoteles y alojamiento","Transporte y movilidad","Viajes y agencias","Espacios y eventos","Restauración","Ocio y experiencias","Bienestar y compras","Servicios profesionales","Socio Colaborador","Patrocinador"]},
+{k:"viajes y agencias directorio entidades empresas colaboradores patrocinadores web",a:sponsorReply("Viajes y agencias"),c:["Todas","Hoteles y alojamiento","Transporte y movilidad","Viajes y agencias","Espacios y eventos","Restauración","Ocio y experiencias","Bienestar y compras","Servicios profesionales","Socio Colaborador","Patrocinador"]},
+{k:"espacios y eventos directorio entidades empresas colaboradores patrocinadores web",a:sponsorReply("Espacios y eventos"),c:["Todas","Hoteles y alojamiento","Transporte y movilidad","Viajes y agencias","Espacios y eventos","Restauración","Ocio y experiencias","Bienestar y compras","Servicios profesionales","Socio Colaborador","Patrocinador"]},
+{k:"restauración directorio entidades empresas colaboradores patrocinadores web",a:sponsorReply("Restauración"),c:["Todas","Hoteles y alojamiento","Transporte y movilidad","Viajes y agencias","Espacios y eventos","Restauración","Ocio y experiencias","Bienestar y compras","Servicios profesionales","Socio Colaborador","Patrocinador"]},
+{k:"ocio y experiencias directorio entidades empresas colaboradores patrocinadores web",a:sponsorReply("Ocio y experiencias"),c:["Todas","Hoteles y alojamiento","Transporte y movilidad","Viajes y agencias","Espacios y eventos","Restauración","Ocio y experiencias","Bienestar y compras","Servicios profesionales","Socio Colaborador","Patrocinador"]},
+{k:"bienestar y compras directorio entidades empresas colaboradores patrocinadores web",a:sponsorReply("Bienestar y compras"),c:["Todas","Hoteles y alojamiento","Transporte y movilidad","Viajes y agencias","Espacios y eventos","Restauración","Ocio y experiencias","Bienestar y compras","Servicios profesionales","Socio Colaborador","Patrocinador"]},
+{k:"servicios profesionales directorio entidades empresas colaboradores patrocinadores web",a:sponsorReply("Servicios profesionales"),c:["Todas","Hoteles y alojamiento","Transporte y movilidad","Viajes y agencias","Espacios y eventos","Restauración","Ocio y experiencias","Bienestar y compras","Servicios profesionales","Socio Colaborador","Patrocinador"]},
+
 {k:"que es aspm asociacion quien sois presentacion sobre acerca fundada desde 1987 historia anos madrid",
- a:`<b>ASPM</b> es la <b>Asociación del Secretariado Profesional de Madrid</b>, activa <b>desde 1987</b> (40 años). Conecta a profesionales de la asistencia a la dirección y el secretariado con formación, bolsa de empleo, comunidad y empresas que quieren llegar a ellas.`},
+ a:`<div style="font-size:16px!important;line-height:1.5!important"><p style="font-size:16px!important">ASPM es la Asociación del Secretariado Profesional de Madrid, una entidad sin ánimo de lucro fundada en 1987 que impulsa el desarrollo y el reconocimiento de la profesión.</p><p style="font-size:16px!important;margin-top:1em">Ofrece a profesionales del secretariado y la asistencia a la dirección una comunidad, formación, contactos, oportunidades laborales y ventajas exclusivas.</p><ul style="font-size:16px!important"><li style="font-size:16px!important">👥 Comunidad y soporte humano</li><li style="font-size:16px!important">🤝 Networking</li><li style="font-size:16px!important">🎓 Formación continua</li><li style="font-size:16px!important">💼 Empleo y talento</li><li style="font-size:16px!important">🎁 Alianzas y ventajas</li></ul><p style="font-size:16px!important;margin-top:1em">Conoce el ecosistema, únete a la asociación o descubre cómo colaborar:</p></div>`,
+ c:["Asóciate","Quiero ser Socio Colaborador","Área Privada"]},
 {k:"socia asociarme asociarse hazte hacerme alta unirme unete inscribir apuntarme membresia carnet",
  a:`Para asociarte, rellena la <b>«Solicitud de Información»</b> en la sección <i>Da el siguiente paso</i> (botones «Asociarme», «Asóciate» o «Quiero asociarme»). Te piden nombre, apellidos, email, teléfono, empresa y una breve presentación. Después ASPM se pone en contacto contigo para explicarte el proceso.`,
  c:["¿Qué datos pide el formulario?","¿Qué beneficios tienen las socias?","¿Qué descuentos hay para socias?"]},
@@ -485,11 +519,9 @@ const KB=[
  a:`<b>Viajes, Transporte y Plataformas</b>: Apartool (alojamiento corporativo), Avis / Budget (alquiler de vehículos), Glauka Viajes, Iberia y Renfe.`},
 {k:"cultura gastronomia servicios artesred flamenco nomo lush nespresso puy du fou",
  a:`<b>Cultura, Gastronomía y Servicios</b>: Artesred (Teatro Flamenco), Grupo Nomo, Lush Spain, Nespresso Professional y Puy du Fou España.`},
-{k:"tecnologicos tecnologia microsoft google telefonica samsung amazon ibm socios tecnologicos",
- a:`<b>Socios Tecnológicos</b>: Microsoft, Google, Telefónica, Samsung, Amazon e IBM.`},
 {k:"patrocinadores lista marcas colaboradores quienes empresas categorias",
- a:`La web agrupa las marcas por categorías: <b>Hoteles y alojamientos</b>, <b>Espacios, eventos, catering y MICE</b>, <b>Viajes, transporte y plataformas</b>, <b>Cultura, gastronomía y servicios</b> y <b>Socios tecnológicos</b>. ¿Sobre cuál quieres saber más?`,
- c:["Espacios, eventos, catering y MICE","Hoteles colaboradores","Socios tecnológicos","Viajes y transporte","Cultura, gastronomía y servicios","¿Qué es Alianzas y Ventajas?"]},
+ a:`La web agrupa las marcas por categorías: <b>Hoteles y alojamientos</b>, <b>Espacios, eventos, catering y MICE</b>, <b>Viajes, transporte y plataformas</b> y <b>Cultura, gastronomía y servicios</b>. ¿Sobre cuál quieres saber más?`,
+ c:["Espacios, eventos, catering y MICE","Hoteles colaboradores","Viajes y transporte","Cultura, gastronomía y servicios","¿Qué es Alianzas y Ventajas?"]},
 {k:"contacto email correo direccion donde estan oficina telefono castellana atrium ubicacion sede",
  a:`📍 <b>Centro de Negocios Atrium</b>, Pº de la Castellana, 40 – 8ª planta, 28046 Madrid.<br>✉️ <a href="mailto:secretaria@aspm.es">secretaria@aspm.es</a>`},
 {k:"redes sociales linkedin instagram youtube siguenos seguir",
@@ -568,8 +600,8 @@ const KB=[
  a:`✈️ <b>PANGEA The Travel Store</b> tiene un acuerdo con ASPM: <ul><li>Condiciones preferentes en <b>viajes corporativos</b>, con un servicio ágil y adaptado a la empresa.</li><li>Ventajas exclusivas en <b>viajes personales</b>.</li><li>Atención experta y personalizada, desde la inspiración inicial hasta el seguimiento del viaje.</li></ul>Su zona privada para asociadas se abre desde el ${L(PRIV,"Área Privada")}.`,
  c:["¿Qué descuentos hay para socias?","Viajes en el directorio de alianzas"]},
 {k:"directorio completo socios colaboradores patrocinadores alianzas categorias empresas colaboran lista buscar buscador filtrar filtros todas todos",
- a:`📇 El <b>directorio de Alianzas y Ventajas</b> reúne cerca de 50 empresas y entidades, con buscador y filtros por categoría. ¿Cuál te interesa?`,
- c:["Hoteles aliados en el directorio de alianzas","Transporte en el directorio de alianzas","Viajes en el directorio de alianzas","Espacios y eventos en el directorio de alianzas","Restauración y ocio en el directorio de alianzas","Bienestar y compras en el directorio de alianzas","Servicios profesionales en el directorio de alianzas"]},
+ a:`📇 El <b>directorio de Alianzas y Ventajas</b> reúne Socios Colaboradores y Patrocinadores, clasificados por categoría. Cada resultado muestra el nombre de la entidad y su página web, sin contactos personales. Selecciona una de las categorías o un grupo para consultar las empresas. Para más información sobre ventajas y condiciones, entra en el ${L(PRIV,"Área Privada")}.`,
+ c:["Todas","Hoteles y alojamiento","Transporte y movilidad","Viajes y agencias","Espacios y eventos","Restauración","Ocio y experiencias","Bienestar y compras","Servicios profesionales","Socio Colaborador","Patrocinador"]},
 {k:"directorio alianzas hoteles hotel alojamiento apartamentos hospes marriott four seasons 1881 santos villa nazules aliados",
  a:`🏨 <b>Hoteles y alojamiento</b> en el directorio de alianzas: 1881 Hotels, Apartamentos El Parque Atocha, Castilla Termal, Derby Hotels Collection, Eurostars Hotels, Hoteles Fontecruz, Four Seasons Hotel Madrid, Hospes Puerta de Alcalá, InterContinental Madrid, Marriott Princesa, Meliá, Minor Hotels, Paradores, RafaelHoteles Atocha, Hoteles Santos, The Palace Madrid, The Westin Madrid Cuzco, Único Hotel y The Principal, y Hotel Spa Villa Nazules. Contactos en el ${L(PRIV,"Área Privada")}.`,
  c:["Descuentos en hoteles","Todos los socios del directorio"]},
@@ -595,15 +627,27 @@ const KB=[
  a:`🔐 Los nombres de las personas de contacto, los correos y los teléfonos de cada empresa colaboradora están reunidos en el <b>Área Privada</b>, el espacio exclusivo para socias y socios, con buscador para encontrar a quien necesites en un momento. Entra aquí: ${L(PRIV,"Área Privada")}. Si todavía no eres socia, ¡te damos la bienvenida! Pide información en <a href="index.html#unete">Asóciate</a>.`,
  c:["¿Cómo me hago socia?","¿Qué hay en el Área Privada?"]},
 ];
-const SUG=["¿Qué es ASPM?","¿Cómo me hago socia?","¿Qué beneficios hay?","¿Qué descuentos hay para socias?","¿Cómo funciona la bolsa de empleo?","¿Quiénes son los patrocinadores?","¿Cómo contacto?","🪪 Crea tu tarjeta (simulada) de socia","⏱️ Reto de 60 segundos","🧭 Hazme el tour","☀️ Un día en la vida de una asistente","💎 Calcula tu puntuación como asistente","Envía mensaje y sugerencias a ASPM","Asóciate","Quiero ser Socio Colaborador"];
+const TESTS=["🪪 Crea tu tarjeta (simulada) de socia","⏱️ Reto de 60 segundos","☀️ Un día en la vida de una asistente","💎 Calcula tu puntuación como asistente"];
+const SUG=["¿Qué es ASPM?","¿Cómo me hago socia?","¿Qué beneficios hay?","¿Qué descuentos hay para socias?","¿Cómo funciona la bolsa de empleo?","¿Quiénes son los Socios Colaboradores y Patrocinadores?","🌐 Ecosistema ASPM","¿Cómo contacto?","🧭 Hazme el tour","🎮 Experiencias interactivas","Envía mensaje y sugerencias a ASPM","Asóciate","Quiero ser Socio Colaborador"];
 const MENU="Menú Principal";
+const EXPERIENCES="🎮 Experiencias interactivas";
+function showMainMenu(){
+  botSay('Aquí tienes el <b>menú principal</b> 👇 ¿Sobre qué te ayudo?',SUG);
+}
+function showExperiences(){
+  botSay('🎮 <b>Experiencias interactivas</b><br>Elige la experiencia que quieres probar:',[...TESTS,MENU]);
+}
 const MENU_BTN='<button type="button" class="chip chip-menu menu-btn">Menú Principal</button>';
 const wireMenu=el=>el.querySelectorAll('.menu-btn').forEach(b=>b.onclick=()=>ask(MENU));
 // ====== MOTOR ======
 const norm=s=>s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9ñ ]/g," ");
 const STOP=new Set("el la los las un una de del en y a que es son por para con me te se mi tu como cual cuales hay al lo su sus o".split(" "));
 function pick(q){
-  const w=norm(q).split(/\s+/).filter(x=>x.length>1&&!STOP.has(x));
+  const normalized=norm(q).trim();
+  // Prioridad a la pregunta exacta del menú principal para evitar
+  // que "ASPM" coincida primero con la entrada del ecosistema.
+  if(normalized==="que es aspm") return KB.find(e=>e.k.startsWith("que es aspm asociacion"))||null;
+  const w=normalized.split(/\s+/).filter(x=>x.length>1&&!STOP.has(x));
   let best=null,bs=0;
   KB.forEach(e=>{const ks=norm(e.k).split(/\s+/);let s=0;
     w.forEach(x=>{ if(ks.includes(x)) s+=2; else if(x.length>3&&ks.some(k=>k.length>3&&(k.startsWith(x.slice(0,4))&&Math.abs(k.length-x.length)<4))) s+=1; });
@@ -619,18 +663,34 @@ function add(html,who,chips){
       const b=document.createElement('button');b.type='button';b.className=t===MENU?'chip chip-menu':'chip';b.textContent=t;b.onclick=()=>ask(t);c.appendChild(b)});d.appendChild(c)}
   chat.appendChild(d);chat.scrollTop=chat.scrollHeight;return d;
 }
+// ====== ANALÍTICA DE PREGUNTAS (GoatCounter) ======
+// 1) Crea una cuenta gratis en https://www.goatcounter.com y pon aquí tu código
+//    (si tu panel es aspm.goatcounter.com, el código es "aspm").
+// 2) Déjalo vacío ("") para desactivar el registro.
+const GC_CODE="";
+const redact=s=>s
+  .replace(/[\w.+-]+@[\w-]+\.[\w.]+/g,"[email]")      // emails
+  .replace(/\+?\d[\d\s().-]{6,}\d/g,"[num]");           // teléfonos / números largos
+function track(kind,text){
+  if(!GC_CODE)return;
+  try{
+    const t=norm(redact(String(text))).replace(/\s+/g," ").trim().slice(0,80);
+    if(t.length<3)return;
+    new Image().src="https://"+GC_CODE+".goatcounter.com/count?e=true&p="+encodeURIComponent("/aspi/"+kind+"/"+t)+"&t="+encodeURIComponent("Aspi · "+kind)+"&rnd="+Math.random().toString(36).slice(2);
+  }catch(e){}
+}
 function ask(t){
   t=t.trim();if(!t)return;
   add(esc(t),'me');q.value='';
   if(handleSpecial(t))return;
   const ty=add('<div class="typing"><i></i><i></i><i></i></div>','bot');
   setTimeout(()=>{ty.remove();const e=pick(t);
-    if(e)add(e.a,'bot',[...(e.c||[]),MENU]);
-    else add(`🤔 Prueba con otra pregunta o escribe a <a href="mailto:secretaria@aspm.es">secretaria@aspm.es</a>.`,'bot',[SUG[0],SUG[1],SUG[3],SUG[4],MENU]);
+    if(e){track('respondida',e.k.split(' ').slice(0,4).join(' '));add(e.a,'bot',[...(e.c||[]),MENU]);}
+    else{track('sin-respuesta',t);add(`🤔 Prueba con otra pregunta o escribe a <a href="mailto:secretaria@aspm.es">secretaria@aspm.es</a>.`,'bot',[SUG[0],SUG[1],SUG[3],SUG[4],MENU]);}
   },450+Math.random()*350);
 }
 // ====== ASPI · TARJETA DE SOCIA + RETOS DE 30 SEGUNDOS ======
-const SITE="https://easylandx.github.io/aspm/index.html";
+const SITE="/test/index.html";
 const FORM=SITE+"#unete";
 const CHIP_LINKS={"Asóciate":SITE+"#solicitud-socia","Quiero ser Socio Colaborador":SITE+"#quiero-colaborar"};
 const WA_TEXT="Nueva Web ASPM "+SITE;
@@ -648,10 +708,11 @@ function botSay(html,chips){
 
 function handleSpecial(t){
   const n=norm(t).trim();
-  if(n===norm(MENU)){flow=null;botSay('Aquí tienes el menú principal 👇 ¿Sobre qué te ayudo?',SUG);return true}
+  if(n===norm(MENU)){flow=null;showMainMenu();return true}
+  if(n===norm(EXPERIENCES)||n==="experiencias interactivas"){flow=null;showExperiences();return true}
   if(flow){
     if(SUG.includes(t)||(!flow.free&&/[?¿]/.test(t))){flow=null;return false}   // un botón o una pregunta: salimos del flujo y respondemos normal
-    if(/^(cancelar|salir|olvidalo|dejalo|no quiero)$/.test(n)){flow=null;botSay('Sin problema, lo dejamos aquí 😊 ¿Te ayudo con algo más?',[SUG[0],SUG[1],SUG[7],SUG[8],MENU]);return true}
+    if(/^(cancelar|salir|olvidalo|dejalo|no quiero)$/.test(n)){flow=null;botSay('Sin problema, lo dejamos aquí 😊 ¿Te ayudo con algo más?',[SUG[0],SUG[1],TESTS[0],TESTS[1],MENU]);return true}
     flow(t);return true;
   }
   if(/(valor|puntuacion) como asistente|calculadora|calcula\w* (mi|tu) (valor|puntuacion)|cuanto valgo|mi (valor|puntuacion)/.test(n)){startCalc();return true}
@@ -760,7 +821,7 @@ async function makeCard(name,job){
   const ty=add('<div class="typing"><i></i><i></i><i></i></div>','bot');
   let blob;try{blob=await drawCard(name,job)}catch(e){blob=null}
   ty.remove();
-  if(!blob){add('😕 No he podido generar la tarjeta en este navegador. ¡Prueba de nuevo!','bot',[SUG[7],MENU]);return}
+  if(!blob){add('😕 No he podido generar la tarjeta en este navegador. ¡Prueba de nuevo!','bot',[TESTS[0],MENU]);return}
   const url=URL.createObjectURL(blob);
   const d=add(`¡Lista, <b>${esc(name)}</b>! 🎉 Aquí tienes tu tarjeta de socia <i>(Tarjeta simulada con fines de entretenimiento. Solicita la oficial.)</i>.<img class="card-preview" alt="Tarjeta de socia ASPM de ${esc(name)}" src="${url}"><div class="btn-row"><button type="button" class="btn btn-wa">💬 Compartir en WhatsApp</button><a class="btn btn-secondary" download="tarjeta-socia-aspm.png" href="${url}">⬇️ Descargar</a><button type="button" class="chip again">🔄 Hacer otra</button>${MENU_BTN}</div><div class="share-note" aria-live="polite"></div>`,'bot');
   wireMenu(d);
@@ -1035,21 +1096,24 @@ const DAY=[
     {t:'Priorizo: muevo la llamada de Tokio y confirmo la comida',r:'Buen criterio: lo que no se puede mover manda, y avisas a todos antes de las 9:00. Decidir qué va primero ya es media agenda resuelta.'},
     {t:'Le pregunto qué es lo más importante del día antes de tocar nada',r:'Preguntar antes de reorganizar evita rehacer la agenda dos veces. El criterio de la asistente es parte del trabajo.'},
     {t:'Lo acepto todo y ya veré cómo encajarlo',r:'Funciona… hasta las 11:00. Cuando la agenda se te va de las manos, lo mejor es no ir sola.'}],
-   aspm:'🎓 <b>Cómo ayuda ASPM:</b> con <b>talleres</b> de gestión del tiempo, herramientas digitales y comunicación asertiva, y con una <b>comunidad de socias</b> que ya han pasado por lo mismo: compañerismo y apoyo mutuo para resolver los retos del día a día.'},
+   aspm:`🎓 <b>Cómo ayuda ASPM:</b> ASPM te acompaña en tu desarrollo profesional a través de cuatro grandes pilares:<ul><li><b>Formación:</b> talleres de gestión del tiempo, herramientas digitales, inteligencia artificial y comunicación asertiva.</li><li><b>Comunidad:</b> encuentros, intercambio de experiencias y apoyo entre profesionales.</li><li><b>Empleo y talento:</b> Hub de Empleo, bolsa de empleo, canal de WhatsApp de ofertas, información sobre certificaciones profesionales y contacto con <b>Adecco Top Assistants</b>.</li><li><b>Ventajas profesionales:</b> acuerdos con empresas colaboradoras, descuentos y oportunidades de networking.</li></ul>Todo ello para ayudarte a crecer, mejorar tus competencias y dar mayor visibilidad a tu profesión. Para consultar más información y las ventajas para asociadas, <a href="${PRIV}">accede al Área Privada</a>.`,
+   refs:[]},
   {time:'12:15',title:'El viaje de última hora',
    text:'Tu directivo tiene que estar mañana a las 9:00 en Barcelona… y te lo dice ahora. Hace falta transporte, un hotel cerca de la reunión y, si es posible, coche al llegar.',
    opts:[
     {t:'Comparo trenes y vuelos y reservo el que mejor encaje',r:'Rápido y práctico: con horarios claros y margen para imprevistos, el viaje queda cerrado antes de comer.'},
     {t:'Llamo a la agencia de viajes corporativa',r:'Delegar en quien lo hace cada día ahorra tiempo, sobre todo cuando hay que combinar transporte, hotel y coche.'},
     {t:'Empiezo por el hotel y luego encajo el transporte',r:'Buen enfoque si la reunión es en una zona concreta: el hotel cerca marca el resto de decisiones.'}],
-   aspm:'✈️ <b>Cómo ayuda ASPM:</b> en <b>Alianzas y Ventajas</b> hay socios colaboradores de viajes y transporte (Renfe, Iberia, PANGEA The Travel Store, BizAway, Europcar con tarifas preferentes) y ventajas en hoteles como NH · Minor Hotels, Meliá o H10. Los contactos de cada empresa están en el Área Privada.'},
+   aspm:`✈️ <b>Cómo ayuda ASPM:</b> en <b>Alianzas y Ventajas</b> encontrarás referencias de transporte, agencias de viaje y hoteles para organizar desplazamientos y estancias. Para consultar las entidades y sus condiciones, <a href="${PRIV}">accede al Área Privada</a>.`,
+   refs:['BizAway','PANGEA The Travel Store','Gold Driving','1881 Hotels','Apartamentos El Parque Atocha','Barceló Hoteles','Derby Hotels Collection / Hoteles Villarreal / Urban','Eurostars Hotels','Four Seasons Hotel Madrid','Hotel Spa Villa Nazules','Hoteles Fontecruz','RafaelHoteles Atocha','The Palace Madrid','The Westin Madrid Cuzco','Único Hotel y The Principal']},
   {time:'16:30',title:'La reunión del consejo',
    text:'Mañana se reúne el consejo en Madrid: 25 personas, café de bienvenida, sala con proyector y un almuerzo ligero. Te piden una propuesta en dos horas.',
    opts:[
     {t:'Pido presupuesto a varios espacios a la vez',r:'Comparar es lo que te da margen para negociar, pero con dos horas hay que saber a quién llamar.'},
     {t:'Repito el espacio de siempre',r:'Seguro y rápido, aunque a veces una buena alternativa mejora precio o servicio.'},
     {t:'Pregunto a compañeras de la profesión por recomendaciones',r:'Un contacto de confianza vale más que diez búsquedas: la experiencia de otras asistentes es oro.'}],
-   aspm:'🏢 <b>Cómo ayuda ASPM:</b> el directorio incluye espacios, eventos, catering y MICE (Calandria, Gran Vía Events, SPmice, Somos Experiences, Grupo La Muñuna, Grupo Eneldo…), y <b>Ephimera</b> ofrece una tarifa reducida del 15 % en sus espacios para reuniones. Además, los eventos y cenas de la asociación te dan <b>networking exclusivo</b> con profesionales y proveedores.'}
+   aspm:`🏢 <b>Cómo ayuda ASPM:</b> el directorio de Alianzas y Ventajas reúne entidades de espacios, eventos y restauración que pueden ayudarte a organizar reuniones y encuentros profesionales. Para consultar las entidades y sus condiciones, <a href="${PRIV}">accede al Área Privada</a>. Además, los eventos y cenas de la asociación te ofrecen <b>networking exclusivo</b> con profesionales y proveedores.`,
+   refs:['Ephimera','SPMICE','Somos Experiences','Eventos Parques Reunidos','The Bamboo Plan · Hotels2Meet','Upper Eat · Executive Restaurants of the World']}
 ];
 
 function startDay(){
@@ -1068,7 +1132,8 @@ function dayScene(n){
       const b=document.createElement('button');b.type='button';b.className='g-opt';b.innerHTML='<b>'+o.t+'</b>';
       b.onclick=()=>{
         box.querySelectorAll('.g-opt').forEach(x=>{x.disabled=true});b.classList.add('picked');
-        out.innerHTML=`<div class="day-res">${o.r}</div><div class="day-aspm">${sc.aspm}</div><div class="btn-row"><button type="button" class="btn btn-primary day-next">${n<DAY.length-1?'Siguiente escena ▶':'🌙 Terminar el día'}</button></div>`;
+        out.innerHTML=`<div class="day-res">${o.r}</div><div class="day-aspm">${sc.aspm}${(sc.refs&&sc.refs.length)?`<div class="day-ref-options">${sc.refs.map((name,i)=>`<button type="button" class="g-opt day-ref" data-ref="${name.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}">${i+1}. ${name}</button>`).join('')}</div>`:''}</div><div class="btn-row"><button type="button" class="btn btn-primary day-next">${n<DAY.length-1?'Siguiente escena ▶':'🌙 Terminar el día'}</button></div>`;
+        out.querySelectorAll('.day-ref').forEach(refBtn=>refBtn.onclick=()=>{out.querySelectorAll('.day-ref').forEach(x=>x.classList.remove('picked'));refBtn.classList.add('picked')});
         out.querySelector('.day-next').onclick=ev=>{ev.target.disabled=true;n<DAY.length-1?dayScene(n+1):dayEnd()};
         chat.scrollTop=chat.scrollHeight;
       };
@@ -1094,7 +1159,7 @@ const CALC_LANG=['Inglés','Francés','Alemán','Italiano','Portugués','Chino',
 const CALC_SEC=[
   {t:'Multinacional / gran empresa',s:72,tip:'Como socia conectas con asistentes de <b>grandes empresas e internacionales</b> y entras en cenas de gala y eventos corporativos con networking exclusivo.'},
   {t:'Hotelería y turismo',s:68,tip:'ASPM tiene alianzas con cadenas hoteleras (Meliá, NH Collection, Paradores, Barceló…) y plataformas de viaje como Iberia o Renfe: tu sector está muy presente en la red.'},
-  {t:'Tecnología y startups',s:74,tip:'Entre los socios tecnológicos hay nombres como <b>Microsoft, Google, Telefónica, Samsung, Amazon e IBM</b>, y la formación incluye talleres de herramientas digitales.'},
+  {t:'Tecnología y startups',s:74,tip:'La formación de ASPM incluye talleres de herramientas digitales y oportunidades para ampliar tu red profesional.'},
   {t:'Eventos y MICE',s:70,tip:'La red incluye espacios y empresas de eventos y MICE (Calandria, SOMOS Experiences, SPmice, Grupo Eneldo…), ideales para ampliar proveedores y contactos.'},
   {t:'Legal, finanzas y consultoría',s:74,tip:'Los eventos y cenas de la asociación te dan <b>networking exclusivo</b>, y la Bolsa de Trabajo tiene contacto con el área Top Assistants de Adecco.'},
   {t:'Sector público, salud o educación',s:62,tip:'El Hub de Empleo y Talento reúne la guía del <b>Certificado de Profesionalidad</b> y la vía PAC para acreditar oficialmente tu experiencia.'},
@@ -1201,7 +1266,8 @@ function calcResult(st){
 }
 
 document.getElementById('f').addEventListener('submit',e=>{e.preventDefault();ask(q.value)});
-add(`¡Hola! 👋 Soy <b>Aspi</b>, el bot amistoso de <b>ASPM</b>. Respondo preguntas sobre la asociación, los beneficios, los patrocinadores, las ofertas y descuentos para socias, la bolsa de empleo, el contacto... ¿Por dónde empezamos?`,'bot',SUG);
+add(`¡Hola! 👋 Soy <b>Aspi</b>, el bot amistoso de <b>ASPM</b>. Respondo preguntas sobre la asociación, los beneficios, los patrocinadores, las ofertas y descuentos para socias, la bolsa de empleo y el contacto.`,'bot');
+showMainMenu();
 </script>
 </body>
 </html>
